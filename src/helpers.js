@@ -138,7 +138,7 @@ const STATUS_EMOJI = {
 };
 
 function buildNotificationBlocks(data, action = 'logged') {
-  const emoji = STATUS_EMOJI[data.status] || '⚪'';
+  const emoji = STATUS_EMOJI[data.status] || '⚪';
   const actionLabel =
     action === 'logged' ? '🎨  New Design Logged' : '👝  Design Updated';
 
