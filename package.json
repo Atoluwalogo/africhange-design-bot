@@ -1,0 +1,21 @@
+{
+  "name": "africhange-design-bot",
+  "version": "1.0.0",
+  "description": "Slack bot for tracking design initiatives at Africhange - logs to Notion automatically.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "@slack/bolt": "^3.19.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
