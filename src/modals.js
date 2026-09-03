@@ -1,27 +1,21 @@
 /**
  * modals.js
  * All Slack Block Kit modal builders.
- * Modals are rebuilt on every status change so conditional blocks
- * (Blocker / Live Build Link) appear or disappear dynamically.
  */
 
 const STATUS_OPTIONS = [
-  { label: 'Not Started', value: 'Not Started' },
-  { label: 'In Progress', value: 'In Progress' },
-  { label: 'Blocked', value: 'Blocked' },
-  { label: 'In Review', value: 'In Review' },
+  { label: 'Not Started',       value: 'Not Started' },
+  { label: 'In Progress',       value: 'In Progress' },
+  { label: 'Blocked',           value: 'Blocked' },
+  { label: 'In Review',         value: 'In Review' },
   { label: 'Under Development', value: 'Under Development' },
-  { label: 'Developed / Live', value: 'Developed / Live' },
+  { label: 'Developed / Live',  value: 'Developed / Live' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main design form modal — used for both Log and Update flows
 // ─────────────────────────────────────────────────────────────────────────────
-function buildDesignFormModal({
-  callbackId = 'log_design_submit',
-  initialDesignerName = '',
-  prefill = {},
-}) {
+function buildDesignFormModal({ callbackId = 'log_design_submit', initialDesignerName = '', prefill = {} }) {
   const status = prefill.status || '';
   const isUpdate = callbackId === 'update_design_submit';
   const showBlocker = status === 'Blocked';
@@ -62,11 +56,22 @@ function buildDesignFormModal({
       element: {
         type: 'plain_text_input',
         action_id: 'figma_link_input',
-        placeholder: {
-          type: 'plain_text',
-          text: 'https://www.figma.com/file/...',
-        },
+        placeholder: { type: 'plain_text', text: 'https://www.figma.com/file/...' },
         initial_value: prefill.figma_link || '',
+      },
+    },
+
+    // ── Prototype Link (optional) ──
+    {
+      type: 'input',
+      block_id: 'prototype_link',
+      label: { type: 'plain_text', text: 'Prototype Link' },
+      optional: true,
+      element: {
+        type: 'plain_text_input',
+        action_id: 'prototype_link_input',
+        placeholder: { type: 'plain_text', text: 'https://www.figma.com/proto/...' },
+        initial_value: prefill.prototype_link || '',
       },
     },
 
@@ -78,10 +83,7 @@ function buildDesignFormModal({
       element: {
         type: 'plain_text_input',
         action_id: 'developers_input',
-        placeholder: {
-          type: 'plain_text',
-          text: 'e.g. Chidi Okafor, Emeka Eze',
-        },
+        placeholder: { type: 'plain_text', text: 'e.g. Chidi Okafor, Emeka Eze' },
         initial_value: prefill.developers || '',
       },
     },
@@ -109,14 +111,9 @@ function buildDesignFormModal({
         type: 'static_select',
         action_id: 'status_select',
         placeholder: { type: 'plain_text', text: 'Select a status' },
-        ...(status
-          ? {
-              initial_option: {
-                text: { type: 'plain_text', text: status },
-                value: status,
-              },
-            }
-          : {}),
+        ...(status ? {
+          initial_option: { text: { type: 'plain_text', text: status }, value: status },
+        } : {}),
         options: STATUS_OPTIONS.map((opt) => ({
           text: { type: 'plain_text', text: opt.label },
           value: opt.value,
@@ -125,7 +122,7 @@ function buildDesignFormModal({
     },
   ];
 
-  // ── Conditional: Blocker Description (only when status = Blocked) ──
+  // ── Conditional: Blocker ──
   if (showBlocker) {
     blocks.push({
       type: 'input',
@@ -135,16 +132,13 @@ function buildDesignFormModal({
         type: 'plain_text_input',
         action_id: 'blocker_input',
         multiline: true,
-        placeholder: {
-          type: 'plain_text',
-          text: 'Describe the blocker clearly so the team can help resolve it.',
-        },
+        placeholder: { type: 'plain_text', text: 'Describe the blocker so the team can help resolve it.' },
         initial_value: prefill.blocker || '',
       },
     });
   }
 
-  // ── Conditional: Live Build Link (only when status = Developed / Live) ──
+  // ── Conditional: Live Build Link ──
   if (showLiveLink) {
     blocks.push({
       type: 'input',
@@ -153,10 +147,7 @@ function buildDesignFormModal({
       element: {
         type: 'plain_text_input',
         action_id: 'live_link_input',
-        placeholder: {
-          type: 'plain_text',
-          text: 'https://staging.africhange.com/...',
-        },
+        placeholder: { type: 'plain_text', text: 'https://staging.africhange.com/...' },
         initial_value: prefill.live_link || '',
       },
     });
@@ -165,22 +156,16 @@ function buildDesignFormModal({
   return {
     type: 'modal',
     callback_id: callbackId,
-    title: {
-      type: 'plain_text',
-      text: isUpdate ? 'Update Design Entry' : 'Log Design Initiative',
-    },
+    title: { type: 'plain_text', text: isUpdate ? 'Update Design Entry' : 'Log Design Initiative' },
     submit: { type: 'plain_text', text: isUpdate ? 'Update' : 'Submit' },
     close: { type: 'plain_text', text: 'Cancel' },
     blocks,
-    // Preserve page_id for update flow so view submission knows which row to update
-    private_metadata: prefill.page_id
-      ? JSON.stringify({ page_id: prefill.page_id })
-      : '',
+    private_metadata: prefill.page_id ? JSON.stringify({ page_id: prefill.page_id }) : '',
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Search modal — used for both Update and Find flows
+// Search modal
 // ─────────────────────────────────────────────────────────────────────────────
 function buildSearchModal({ callbackId, title, placeholder }) {
   return {
@@ -205,7 +190,7 @@ function buildSearchModal({ callbackId, title, placeholder }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Entry select modal — shown after search returns results (Update flow)
+// Entry select modal (Update flow)
 // ─────────────────────────────────────────────────────────────────────────────
 function buildSelectEntryModal(entries, callbackId) {
   if (entries.length === 0) {
@@ -217,10 +202,7 @@ function buildSelectEntryModal(entries, callbackId) {
       blocks: [
         {
           type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: "⚠️ No design entries matched your search.\nTry a shorter or different keyword.",
-          },
+          text: { type: 'mrkdwn', text: '⚠️ No design entries matched your search.\nTry a shorter or different keyword.' },
         },
       ],
     };
@@ -251,7 +233,6 @@ function buildSelectEntryModal(entries, callbackId) {
           options: entries.map((entry) => ({
             text: {
               type: 'plain_text',
-              // Truncate to Slack's 75-char limit for option labels
               text: `${entry.initiative_name} — ${entry.designer} (${entry.status || 'No status'})`.substring(0, 75),
             },
             value: entry.id,
@@ -263,7 +244,7 @@ function buildSelectEntryModal(entries, callbackId) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Find results modal — displayed inline after a /find-design search
+// Find results modal
 // ─────────────────────────────────────────────────────────────────────────────
 function buildFindResultsModal(entries, query) {
   if (entries.length === 0) {
@@ -275,22 +256,19 @@ function buildFindResultsModal(entries, query) {
       blocks: [
         {
           type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `⚠️ No results found for *"${query}"*.\nTry a different keyword.`,
-          },
+          text: { type: 'mrkdwn', text: `⚠️ No results found for *"${query}"*.\nTry a different keyword.` },
         },
       ],
     };
   }
 
   const STATUS_EMOJI = {
-    'Not Started': '⚪',
-    'In Progress': '🔵',
-    Blocked: '🔴',
-    'In Review': '🟡',
-    'Under Development': '🟠',
-    'Developed / Live': '🟢',
+    'Not Started':        '⚪',
+    'In Progress':        '🔵',
+    'Blocked':            '🔴',
+    'In Review':          '🟡',
+    'Under Development':  '🟠',
+    'Developed / Live':   '🟢',
   };
 
   const blocks = [
@@ -306,24 +284,18 @@ function buildFindResultsModal(entries, query) {
 
   entries.forEach((entry) => {
     const emoji = STATUS_EMOJI[entry.status] || '⚪';
-    blocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: [
-          `*${entry.initiative_name}*`,
-          `${emoji} ${entry.status || 'No status'}  |  👤 ${entry.designer}`,
-          entry.figma_link ? `🎨 <${entry.figma_link}|View Figma>` : '',
-          entry.developers ? `💻 ${entry.developers}` : '',
-          entry.prd_link ? `📋 <${entry.prd_link}|Open Ticket>` : '',
-          entry.blocker ? `🚫 Blocker: ${entry.blocker}` : '',
-          entry.live_link ? `🚀 <${entry.live_link}|Live Build>` : '',
-          `<${entry.url}|View in Notion →>`,
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      },
-    });
+    const lines = [
+      `*${entry.initiative_name}*`,
+      `${emoji} ${entry.status || 'No status'}  |  👤 ${entry.designer}`,
+    ];
+    if (entry.figma_link)     lines.push(`🎨 <${entry.figma_link}|View Figma>`);
+    if (entry.prototype_link) lines.push(`🔗 <${entry.prototype_link}|View Prototype>`);
+    if (entry.developers)     lines.push(`💻 ${entry.developers}`);
+    if (entry.prd_link)       lines.push(`📋 <${entry.prd_link}|Open Ticket>`);
+    if (entry.blocker)        lines.push(`🚫 Blocker: ${entry.blocker}`);
+    if (entry.live_link)      lines.push(`🚀 <${entry.live_link}|Live Build>`);
+
+    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: lines.join('\n') } });
     blocks.push({ type: 'divider' });
   });
 
@@ -336,9 +308,4 @@ function buildFindResultsModal(entries, query) {
   };
 }
 
-module.exports = {
-  buildDesignFormModal,
-  buildSearchModal,
-  buildSelectEntryModal,
-  buildFindResultsModal,
-};
+module.exports = { buildDesignFormModal, buildSearchModal, buildSelectEntryModal, buildFindResultsModal };
