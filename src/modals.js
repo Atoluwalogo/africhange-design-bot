@@ -106,6 +106,7 @@ function buildDesignFormModal({ callbackId = 'log_design_submit', initialDesigne
     {
       type: 'input',
       block_id: 'status',
+      dispatch_action: true,
       label: { type: 'plain_text', text: 'Status' },
       element: {
         type: 'static_select',
