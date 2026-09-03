@@ -1,47 +1,22 @@
 const { Client } = require('@notionhq/client');
 
-// Direct Notion client (used for search/get/update if NOTION_API_KEY is set)
+// Direct Notion client — used for all operations when NOTION_API_KEY is set
 const notion = process.env.NOTION_API_KEY
   ? new Client({ auth: process.env.NOTION_API_KEY })
   : null;
 
 const DATABASE_ID = process.env.NOTION_DATABASE_ID;
-const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL;
 
 /**
- * Creates a new entry by POSTing to a Make.com webhook.
- * Make handles writing to Notion and returns { id, url }.
+ * Creates a new entry directly in the Notion database.
  */
 async function createEntry(data) {
-  if (!MAKE_WEBHOOK_URL) {
-    throw new Error('MAKE_WEBHOOK_URL environment variable is not set.');
-  }
-
-  const payload = {
-    initiative_name: data.initiative_name || '',
-    designer: data.designer || '',
-    figma_link: data.figma_link || '',
-    developers: data.developers || '',
-    status: data.status || '',
-    prd_link: data.prd_link || '',
-    blocker: data.status === 'Blocked' ? (data.blocker || '') : '',
-    live_link: data.status === 'Developed / Live' ? (data.live_link || '') : '',
-  };
-
-  const response = await fetch(MAKE_WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+  if (!notion) throw new Error('NOTION_API_KEY environment variable is not set.');
+  const page = await notion.pages.create({
+    parent: { database_id: DATABASE_ID },
+    properties: buildProperties(data),
   });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Make webhook returned ${response.status}: ${text}`);
-  }
-
-  const result = await response.json();
-  // Make scenario returns { id, url } from the Notion page
-  return { id: result.id, url: result.url };
+  return { id: page.id, url: page.url };
 }
 
 async function searchEntries(query) {
@@ -62,10 +37,7 @@ async function getEntry(pageId) {
 
 async function updateEntry(pageId, data) {
   if (!notion) throw new Error('NOTION_API_KEY is not set for update.');
-  const page = await notion.pages.update({
-    page_id: pageId,
-    properties: buildProperties(data),
-  });
+  const page = await notion.pages.update({ page_id: pageId, properties: buildProperties(data) });
   return page;
 }
 
@@ -89,8 +61,7 @@ function buildProperties(data) {
 function extractEntryData(page) {
   const p = page.properties;
   return {
-    id: page.id,
-    url: page.url,
+    id: page.id, url: page.url,
     initiative_name: p['Initiative Name']?.title?.[0]?.plain_text || '',
     designer: p['Designer']?.rich_text?.[0]?.plain_text || '',
     figma_link: p['Figma Link']?.url || '',
