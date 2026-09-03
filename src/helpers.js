@@ -16,36 +16,36 @@ function validateFormData(data) {
   const errors = {};
 
   if (!data.initiative_name?.trim()) {
-    errors['initiative_name'] = { type: 'plain_text', text: 'Initiative name is required.' };
+    errors['initiative_name'] = 'Initiative name is required.';
   }
   if (!data.designer?.trim()) {
-    errors['designer_name'] = { type: 'plain_text', text: 'Designer name is required.' };
+    errors['designer_name'] = 'Designer name is required.';
   }
   if (!data.figma_link?.trim()) {
-    errors['figma_link'] = { type: 'plain_text', text: 'Figma link is required.' };
+    errors['figma_link'] = 'Figma link is required.';
   } else if (!isFigmaUrl(data.figma_link)) {
-    errors['figma_link'] = { type: 'plain_text', text: 'Please enter a valid Figma URL (must contain figma.com).' };
+    errors['figma_link'] = 'Please enter a valid Figma URL (must contain figma.com).';
   }
   if (data.prototype_link?.trim() && !isValidUrl(data.prototype_link)) {
-    errors['prototype_link'] = { type: 'plain_text', text: 'Please enter a valid URL for the prototype.' };
+    errors['prototype_link'] = 'Please enter a valid URL for the prototype.';
   }
   if (!data.developers?.trim()) {
-    errors['developers'] = { type: 'plain_text', text: 'Please name at least one developer.' };
+    errors['developers'] = 'Please name at least one developer.';
   }
   if (!data.status) {
-    errors['status'] = { type: 'plain_text', text: 'Please select a status.' };
+    errors['status'] = 'Please select a status.';
   }
   if (data.prd_link?.trim() && !isValidUrl(data.prd_link)) {
-    errors['prd_link'] = { type: 'plain_text', text: 'Please enter a valid URL for the PRD / ticket.' };
+    errors['prd_link'] = 'Please enter a valid URL for the PRD / ticket.';
   }
   if (data.status === 'Blocked' && !data.blocker?.trim()) {
-    errors['blocker_description'] = { type: 'plain_text', text: 'Please describe the blocker.' };
+    errors['blocker_description'] = 'Please describe the blocker.';
   }
   if (data.status === 'Developed / Live' && !data.live_link?.trim()) {
-    errors['live_build_link'] = { type: 'plain_text', text: 'Please provide the live build link.' };
+    errors['live_build_link'] = 'Please provide the live build link.';
   }
   if (data.live_link?.trim() && !isValidUrl(data.live_link)) {
-    errors['live_build_link'] = { type: 'plain_text', text: 'Please enter a valid URL for the live build.' };
+    errors['live_build_link'] = 'Please enter a valid URL for the live build.';
   }
 
   return Object.keys(errors).length > 0 ? errors : null;
