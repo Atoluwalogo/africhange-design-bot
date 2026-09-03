@@ -1,76 +1,39 @@
-const { Client } = require('@notionhq/client');
-
-// Direct Notion client — used for all operations when NOTION_API_KEY is set
-const notion = process.env.NOTION_API_KEY
-  ? new Client({ auth: process.env.NOTION_API_KEY })
-  : null;
-
-const DATABASE_ID = process.env.NOTION_DATABASE_ID;
+const SHEETS_WEBHOOK_URL = process.env.SHEETS_WEBHOOK_URL;
 
 /**
- * Creates a new entry directly in the Notion database.
+ * Creates a new entry by posting to the Google Apps Script webhook,
+ * which appends a row to the Africhange Design Tracker sheet.
  */
 async function createEntry(data) {
-  if (!notion) throw new Error('NOTION_API_KEY environment variable is not set.');
-  const page = await notion.pages.create({
-    parent: { database_id: DATABASE_ID },
-    properties: buildProperties(data),
-  });
-  return { id: page.id, url: page.url };
-}
-
-async function searchEntries(query) {
-  if (!notion) throw new Error('NOTION_API_KEY is not set for search.');
-  const response = await notion.databases.query({
-    database_id: DATABASE_ID,
-    filter: { property: 'Initiative Name', title: { contains: query } },
-    sorts: [{ property: 'Last Updated', direction: 'descending' }],
-    page_size: 15,
-  });
-  return response.results;
-}
-
-async function getEntry(pageId) {
-  if (!notion) throw new Error('NOTION_API_KEY is not set for get.');
-  return await notion.pages.retrieve({ page_id: pageId });
-}
-
-async function updateEntry(pageId, data) {
-  if (!notion) throw new Error('NOTION_API_KEY is not set for update.');
-  const page = await notion.pages.update({ page_id: pageId, properties: buildProperties(data) });
-  return page;
-}
-
-function buildProperties(data) {
-  return {
-    'Initiative Name': { title: [{ text: { content: data.initiative_name || '' } }] },
-    Designer: { rich_text: [{ text: { content: data.designer || '' } }] },
-    'Figma Link': { url: data.figma_link || null },
-    'Developer(s) Involved': { rich_text: [{ text: { content: data.developers || '' } }] },
-    Status: { select: { name: data.status } },
-    'PRD / Ticket Link': { url: data.prd_link || null },
-    'Blocker Description': {
-      rich_text: [{ text: { content: data.status === 'Blocked' && data.blocker ? data.blocker : '' } }],
-    },
-    'Live Build Link': {
-      url: data.status === 'Developed / Live' && data.live_link ? data.live_link : null,
-    },
+  if (!SHEETS_WEBHOOK_URL) throw new Error('SHEETS_WEBHOOK_URL environment variable is not set.');
+  const payload = {
+    initiative_name: data.initiative_name || '',
+    designer: data.designer || '',
+    figma_link: data.figma_link || '',
+    developers: data.developers || '',
+    status: data.status || '',
+    prd_link: data.prd_link || '',
+    blocker: data.status === 'Blocked' ? (data.blocker || '') : '',
+    live_link: data.status === 'Developed / Live' ? (data.live_link || '') : '',
   };
+  const response = await fetch(SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Sheets webhook returned ${response.status}: ${text}`);
+  }
+  const result = await response.json();
+  if (!result.success) throw new Error(`Sheets webhook error: ${result.error}`);
+  return { id: `row-${result.row || 'new'}`, url: null };
 }
 
-function extractEntryData(page) {
-  const p = page.properties;
-  return {
-    id: page.id, url: page.url,
-    initiative_name: p['Initiative Name']?.title?.[0]?.plain_text || '',
-    designer: p['Designer']?.rich_text?.[0]?.plain_text || '',
-    figma_link: p['Figma Link']?.url || '',
-    developers: p['Developer(s) Involved']?.rich_text?.[0]?.plain_text || '',
-    prd_link: p['PRD / Ticket Link']?.url || '',
-    status: p['Status']?.select?.name || '',
-    blocker: p['Blocker Description']?.rich_text?.[0]?.plain_text || '',
-    live_link: p['Live Build Link']?.url || '',
-  };
-}
+// Stub functions — search/update not supported via Sheets webhook
+async function searchEntries() { return []; }
+async function getEntry() { return null; }
+async function updateEntry() { return null; }
+function extractEntryData(entry) { return entry; }
 
 module.exports = { createEntry, searchEntries, getEntry, updateEntry, extractEntryData };
