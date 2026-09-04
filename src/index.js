@@ -210,9 +210,7 @@ app.view('select_entry_to_update', async ({ ack, view, logger }) => {
     await ack({
       response_action: 'errors',
       errors: {
-        entry_select: {
-          'Please select an entry.',
-        },
+        entry_select: 'Please select an entry.',
       },
     });
     return;
@@ -274,9 +272,7 @@ app.view('update_design_submit', async ({ ack, body, view, client, logger }) => 
     await ack({
       response_action: 'errors',
       errors: {
-        initiative_name: {
-          'Could not identify which entry to update. Please start again with /update-design.',
-        },
+        initiative_name: 'Could not identify which entry to update. Please start again with /update-design.',
       },
     });
     return;
