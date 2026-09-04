@@ -211,7 +211,6 @@ app.view('select_entry_to_update', async ({ ack, view, logger }) => {
       response_action: 'errors',
       errors: {
         entry_select: {
-          type: 'plain_text',
           text: 'Please select an entry.',
         },
       },
@@ -276,7 +275,6 @@ app.view('update_design_submit', async ({ ack, body, view, client, logger }) => 
       response_action: 'errors',
       errors: {
         initiative_name: {
-          type: 'plain_text',
           text: 'Could not identify which entry to update. Please start again with /update-design.',
         },
       },
